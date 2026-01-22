@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musical Vibe - Sparks Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- ESTILO BASE BRUTALISTA --- */
+        body {
+            background-color: #fff;
+            background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: #000;
+            font-family: 'Courier Prime', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            border: 4px solid #000;
+            background: #fff;
+            padding: 25px;
+            box-shadow: 10px 10px 0px #000;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            background: #ffff00;
+            display: inline-block;
+            padding: 5px 10px;
+            border: 3px solid #000;
+            margin-top: 0;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* --- SISTEMA DE FAÍSCAS --- */
+        .spark {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #000;
+            pointer-events: none;
+            z-index: 100;
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* --- CONTAINER DA IMAGEM --- */
+        .city-img-container {
+            width: 100%;
+            height: 250px; /* Altura fixa ideal para mobile e desktop */
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px #000;
+            margin: 20px 0;
+            overflow: hidden;
+            background: #eee;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .city-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Faz a imagem preencher o quadro sem esticar */
+            display: block;
+            filter: grayscale(100%);
+            transition: 0.3s;
+            pointer-events: none;
+        }
+
+        .city-img-container:hover img {
+            filter: grayscale(0%);
+        }
+
+        /* --- BOTÕES E GRIDS --- */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border: 3px solid #000;
+            background: #fff;
+            padding: 12px;
+            font-family: 'Courier Prime', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: 0.1s;
+        }
+
+        .btn.active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .action-btn {
+            width: 100%;
+            border: 4px solid #000;
+            background: #000;
+            color: #fff;
+            padding: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 6px 6px 0px #555;
+            cursor: pointer;
+        }
+
+        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .hidden { display: none; }
+
+        .recommendation-box {
+            border: 4px solid #000;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: 6px 6px 0px #000;
+            text-align: center;
+        }
+
+        @media (max-width: 400px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.4rem; }
+            .city-img-container { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="step-1">
+        <h1>Music Quiz</h1>
+        <p><strong>> ESCOLHA 3 ESTILOS:</strong></p>
+        <div class="grid" id="grid-estilos"></div>
+        <button id="btn-ir-resultado" class="action-btn" disabled onclick="gerarCidade()">CALCULAR (0/3)</button>
+    </div>
+
+    <div id="step-2" class="hidden">
+        <h1>DESTINO:</h1>
+        <div id="cidade-nome" style="font-size: 1.8rem; font-weight: 900; margin: 10px 0; text-transform: uppercase;">CIDADE</div>
+        
+        <div class="city-img-container" onclick="createSparks(event)">
+            <img id="img-cidade" src="" alt="Clique para faíscas!">
+        </div>
+        
+        <p id="cidade-desc" style="font-weight: bold; margin-bottom: 20px;"></p>
+        <button class="action-btn" style="background:#ffff00; color:#000;" onclick="abrirIndicao()">INDICAÇÃO DE MÚSICA?</button>
+    </div>
+
+    <div id="step-3" class="hidden">
+        <h1>INDICAÇÃO</h1>
+        <p><strong>> ESCOLHA 1 ESTILO:</strong></p>
+        <div class="grid" id="grid-unico"></div>
+    </div>
+
+    <div id="step-4" class="hidden">
+        <h1>OUÇA ISSO:</h1>
+        <div id="box-final" class="recommendation-box">
+            <h2 id="musica-final" style="margin:0; text-transform: uppercase;"></h2>
+            <p id="artista-final" style="margin:10px 0 0 0; font-weight: bold;"></p>
+        </div>
+        <button class="action-btn" style="background:#fff; color:#000; margin-top:20px;" onclick="location.reload()">RECOMEÇAR</button>
+    </div>
+</div>
+
+<script>
+    const estilos = [
+        { nome: "Sertanejo", cat: "rio", cor: "#FF8C00", musica: "Erro Gostoso", artista: "Simone Mendes" },
+        { nome: "Funk", cat: "rio", cor: "#FF00FF", musica: "Boladão", artista: "MC Danado" },
+        { nome: "MPB", cat: "rio", cor: "#32CD32", musica: "Avisa", artista: "Gilberto Gil" },
+        { nome: "Reggae", cat: "rio", cor: "#FFD700", musica: "Is This Love", artista: "Bob Marley" },
+        { nome: "Pop", cat: "ny", cor: "#00BFFF", musica: "Anti-Hero", artista: "Taylor Swift" },
+        { nome: "Hip-Hop", cat: "ny", cor: "#708090", musica: "HUMBLE.", artista: "Kendrick Lamar" },
+        { nome: "K-Pop", cat: "ny", cor: "#FFB6C1", musica: "Dynamite", artista: "BTS" },
+        { nome: "Rock", cat: "londres", cor: "#FF0000", musica: "Do I Wanna Know?", artista: "Arctic Monkeys" },
+        { nome: "Jazz", cat: "londres", cor: "#4B0082", musica: "Back to Black", artista: "Amy Winehouse" },
+        { nome: "Eletrônica", cat: "berlim", cor: "#ADFF2F", musica: "Animals", artista: "Martin Garrix" }
+    ];
+
+   const cidades = {
+    rio: { 
+        nome: "RIO DE JANEIRO", 
+        desc: "Sua vibe é solar e vibrante!", 
+        img: "e63f71e3-03fb-4c1b-a1e6-c8b1586a7e73.webp" // Coloque o nome do arquivo aqui
+    },
+    ny: { 
+        nome: "NEW YORK", 
+        desc: "Você pertence às luzes da cidade!", 
+        img: "17.jpg" 
+    },
+    londres: { 
+        nome: "LONDRES", 
+        desc: "Sua alma é clássica e rebelde!", 
+        img: "conheca-londres.jpg" 
+    },
+    berlim: { 
+        nome: "BERLIM", 
+        desc: "Você ama a liberdade da noite!", 
+        img: "d8aa431640360c5ff73a65a20a438420b5f1c8d7-1600x1066.jpg" 
+    }
+};
+
+    let selecionados3 = [];
+
+    // RENDERIZAR GRID INICIAL
+    const grid1 = document.getElementById('grid-estilos');
+    estilos.forEach(estilo => {
+        const div = document.createElement('div');
+        div.className = 'btn';
+        div.innerText = estilo.nome;
+        div.onclick = () => {
+            if (selecionados3.includes(estilo)) {
+                selecionados3 = selecionados3.filter(s => s !== estilo);
+                div.classList.remove('active');
+                div.style.backgroundColor = "#fff";
+            } else if (selecionados3.length < 3) {
+                selecionados3.push(estilo);
+                div.classList.add('active');
+                div.style.backgroundColor = estilo.cor;
+            }
+            document.getElementById('btn-ir-resultado').disabled = selecionados3.length !== 3;
+            document.getElementById('btn-ir-resultado').innerText = `CALCULAR (${selecionados3.length}/3)`;
+        };
+        grid1.appendChild(div);
+    });
+
+    function gerarCidade() {
+        let pontos = { rio: 0, ny: 0, londres: 0, berlim: 0 };
+        selecionados3.forEach(s => pontos[s.cat]++);
+        let vencedor = Object.keys(pontos).reduce((a, b) => pontos[a] >= pontos[b] ? a : b);
+        if (pontos[vencedor] === 1) vencedor = selecionados3[0].cat;
+
+        const dados = cidades[vencedor];
+        document.getElementById('step-1').classList.add('hidden');
+        document.getElementById('step-2').classList.remove('hidden');
+        document.getElementById('cidade-nome').innerText = dados.nome;
+        document.getElementById('cidade-desc').innerText = dados.desc;
+        document.getElementById('img-cidade').src = dados.img;
+    }
+
+    function abrirIndicao() {
+        document.getElementById('step-2').classList.add('hidden');
+        document.getElementById('step-3').classList.remove('hidden');
+        const gridUnico = document.getElementById('grid-unico');
+        gridUnico.innerHTML = '';
+        estilos.forEach(estilo => {
+            const div = document.createElement('div');
+            div.className = 'btn';
+            div.innerText = estilo.nome;
+            div.onmouseover = () => div.style.backgroundColor = estilo.cor;
+            div.onmouseout = () => div.style.backgroundColor = "#fff";
+            div.onclick = () => {
+                document.getElementById('step-3').classList.add('hidden');
+                document.getElementById('step-4').classList.remove('hidden');
+                document.getElementById('box-final').style.backgroundColor = estilo.cor;
+                document.getElementById('musica-final').innerText = `"${estilo.musica}"`;
+                document.getElementById('artista-final').innerText = `ARTISTA: ${estilo.artista}`;
+            };
+            gridUnico.appendChild(div);
+        });
+    }
+
+    // FUNÇÃO DAS FAÍSCAS
+    const sparkColors = ['#FF00FF', '#00FFFF', '#FFFF00', '#FF0000', '#00FF00'];
+    function createSparks(e) {
+        const container = e.currentTarget;
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        for (let i = 0; i < 15; i++) {
+            const spark = document.createElement('div');
+            spark.className = 'spark';
+            spark.style.left = `${x}px`;
+            spark.style.top = `${y}px`;
+            spark.style.backgroundColor = sparkColors[Math.floor(Math.random() * sparkColors.length)];
+
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 40 + Math.random() * 110;
+            spark.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+            spark.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+
+            container.appendChild(spark);
+            setTimeout(() => spark.remove(), 800);
+        }
+    }
+</script>
+</body>
+</html>
